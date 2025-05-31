@@ -1,10 +1,25 @@
 {
-  "name": "simple-overtime",
   "title": "Simple Over-Time",
   "description": "Lightweight turn-based damage or save effects without MidiQOL.",
   "version": "0.1.0",
-  "author": "Your Name",
-  "minimumCoreVersion": "12",
-  "compatibleCoreVersion": "12",
-  "esmodules": ["simple-overtime.js"]
+  "esmodules": [
+    "simple-overtime.js"
+  ],
+  "id": "simple-overtime",
+  "relationships": {
+    "recommends": [
+      {
+        "id": "dae",
+        "type": "module",
+        "compatibility": {}
+      }
+    ]
+  },
+  "compatibility": {
+    "minimum": "12",
+    "verified": "12"
+  },
+  "url": "https://github.com/exanimomeo/Simple-Overtime",
+  "manifest": "https://raw.githubusercontent.com/exanimomeo/Simple-Overtime/main/module.json",
+  "download": "https://github.com/exanimomeo/Simple-Overtime/archive/refs/heads/main.zip"
 }
