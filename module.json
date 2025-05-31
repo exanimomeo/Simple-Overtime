@@ -1,0 +1,10 @@
+{
+  "name": "simple-overtime",
+  "title": "Simple Over-Time",
+  "description": "Lightweight turn-based damage or save effects without MidiQOL.",
+  "version": "0.1.0",
+  "author": "Your Name",
+  "minimumCoreVersion": "12",
+  "compatibleCoreVersion": "12",
+  "esmodules": ["simple-overtime.js"]
+}
