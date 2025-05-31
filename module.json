@@ -1,25 +1,63 @@
-{
-  "title": "Simple Over-Time",
-  "description": "Lightweight turn-based damage or save effects without MidiQOL.",
-  "version": "0.1.0",
-  "esmodules": [
-    "simple-overtime.js"
-  ],
-  "id": "simple-overtime",
-  "relationships": {
-    "recommends": [
-      {
-        "id": "dae",
-        "type": "module",
-        "compatibility": {}
-      }
-    ]
-  },
-  "compatibility": {
-    "minimum": "12",
-    "verified": "12"
-  },
-  "url": "https://github.com/exanimomeo/Simple-Overtime",
-  "manifest": "https://raw.githubusercontent.com/exanimomeo/Simple-Overtime/main/module.json",
-  "download": "https://github.com/exanimomeo/Simple-Overtime/archive/refs/heads/main.zip"
+/*───────────────────────────────────────────────────────────────
+  Simple Over-Time  –  Foundry V12
+  Register key AFTER dnd5e is ready (same trick ATL & MidiQOL use)
+────────────────────────────────────────────────────────────────*/
+
+const MODULE_ID = "simple-overtime";
+const FLAG_KEY  = `flags.${MODULE_ID}`;
+
+/* 0 ─ init */
+Hooks.once("init", () => console.log("🟢 SimpleOverTime | init"));
+
+/* 1 ─ register key in dnd5e’s list AFTER it finishes building it */
+Hooks.once("ready", () => {
+  const list = CONFIG?.DND5E?.effectKeys;
+  if (Array.isArray(list) && !list.includes(FLAG_KEY)) {
+    list.push(FLAG_KEY);
+    console.log("🟢 SimpleOverTime | key registered in dnd5e list");
+  }
+
+  /* many modules also push into the generic suggestions array */
+  const sug = CONFIG?.ActiveEffect?.keySuggestions;
+  if (Array.isArray(sug) && !sug.includes(FLAG_KEY)) sug.push(FLAG_KEY);
+});
+
+/* 2 ─ turn START */
+Hooks.on("updateCombat", async combat => {
+  const token = combat.combatant?.token;
+  if (token?.actor) await tick(token.actor, "start");
+});
+
+/* 3 ─ turn END (pre-increment) */
+Hooks.on("preUpdateCombat", async combat => {
+  const token = combat.combatant?.token;
+  if (token?.actor) await tick(token.actor, "end");
+});
+
+/* 4 ─ worker */
+async function tick(actor, phase) {
+  for (const ef of actor.effects) {
+    const cfg = ef.getFlag(MODULE_ID);          // flags.simple-overtime
+    if (!cfg) continue;
+    if ((cfg.phase ?? "start") !== phase) continue;
+
+    /* optional save */
+    let fail = true;
+    if (cfg.save && cfg.dc) {
+      const sv = await actor.rollAbilitySave(cfg.save, {dc: cfg.dc, chatMessage: true});
+      fail = sv.total < cfg.dc;
+      if (!fail && cfg.onSave === "none") continue;
+      if (!fail && cfg.onSave === "half") cfg.half = true;
+    }
+
+    /* damage */
+    if (!cfg.formula) continue;
+    const roll = await new Roll(cfg.formula).roll({async: true});
+    if (cfg.half) roll.total = Math.floor(roll.total / 2);
+
+    roll.toMessage({
+      speaker: ChatMessage.getSpeaker({actor}),
+      flavor : `**${ef.label}** (${phase}-of-turn)`
+    });
+  }
 }
